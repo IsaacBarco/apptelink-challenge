@@ -1,14 +1,14 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import Login from './components/Login'
-import Dashboard from './components/Dashboard'
+import Login from './features/auth/Login'
+import Dashboard from './features/dashboard/Dashboard'
 import './App.css'
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [loading, setLoading] = useState(true)
 
-  // Verificar si hay token al cargar la app
+  // Verificar si hay token al cargar la aplicación
   useEffect(() => {
     const token = localStorage.getItem('access_token')
     if (token) {

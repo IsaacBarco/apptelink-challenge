@@ -57,29 +57,28 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'veterinaria.wsgi.application'
 
-# SQL Server Database - Configuración para tu servidor
+# SQLite Database (desarrollo)
+#DATABASES = {
+#    'default': {
+#        'ENGINE': 'django.db.backends.sqlite3',
+#        'NAME': BASE_DIR / 'db.sqlite3',
+#    }
+#}
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'mssql',
+        'NAME': 'veterinaria_db',
+        'USER': '',
+        'PASSWORD': '',
+        'HOST': 'DESKTOP-RA289GG\\SQLEXPRESS',  # Correcto: GG
+        'PORT': '',
+        'OPTIONS': {
+            'driver': 'ODBC Driver 18 for SQL Server',
+            'extra_params': 'Trusted_Connection=yes;TrustServerCertificate=yes'
+        },
     }
 }
-
-# Comentado por ahora - activaremos SQL Server después
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': 'veterinaria_db',
-#         'USER': 'DESKTOP-RA289GQ\\User',  # Tu usuario de Windows
-#         'PASSWORD': '',  # Sin contraseña para Windows Auth
-#         'HOST': 'DESKTOP-RA289GQ\\SQLEXPRESS',
-#         'PORT': '',
-#         'OPTIONS': {
-#             'driver': 'ODBC Driver 17 for SQL Server',
-#             'Trusted_Connection': 'yes',
-#         },
-#     }
-# }
 
 # User model personalizado
 AUTH_USER_MODEL = 'authentication.CustomUser'

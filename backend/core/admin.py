@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Owner, Pet, Service, Professional, Appointment
+from .models import Owner, Pet, Service, Appointment
 
 @admin.register(Owner)
 class OwnerAdmin(admin.ModelAdmin):
@@ -27,15 +27,9 @@ class ServiceAdmin(admin.ModelAdmin):
     list_filter = ['service_type', 'requires_medication', 'is_active']
     search_fields = ['name', 'description']
 
-@admin.register(Professional)
-class ProfessionalAdmin(admin.ModelAdmin):
-    list_display = ['name', 'phone', 'is_active']
-    search_fields = ['name', 'phone']
-    list_filter = ['is_active']
-
 @admin.register(Appointment)
 class AppointmentAdmin(admin.ModelAdmin):
-    list_display = ['appointment_date', 'pet', 'service', 'status', 'assigned_professional']
-    list_filter = ['status', 'service__service_type', 'assigned_professional']
+    list_display = ['appointment_date', 'pet', 'service', 'status']
+    list_filter = ['status', 'service__service_type']
     search_fields = ['pet__name', 'pet__owner__full_name', 'service__name']
     date_hierarchy = 'appointment_date'

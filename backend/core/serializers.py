@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Owner, Pet, Service, Appointment, Professional
+from .models import Owner, Pet, Service, Appointment
 from datetime import date
 
 
@@ -27,7 +27,7 @@ class OwnerSerializer(serializers.ModelSerializer):
         return value
 
     def validate_phone(self, value):
-        """Validación para teléfono"""
+        """Validación para número de teléfono"""
         clean_phone = value.replace(' ', '').replace('-', '')
         if len(clean_phone) < 7:
             raise serializers.ValidationError(
@@ -112,12 +112,6 @@ class ServiceSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at', 'service_type_display']
 
 
-class ProfessionalSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Professional
-        fields = ['id', 'name', 'specialties', 'phone', 'email', 'is_active']
-
-
 class AppointmentSerializer(serializers.ModelSerializer):
     pet_name = serializers.CharField(source='pet.name', read_only=True)
     pet_breed = serializers.CharField(source='pet.breed', read_only=True)
@@ -125,7 +119,6 @@ class AppointmentSerializer(serializers.ModelSerializer):
     owner_phone = serializers.CharField(source='pet.owner.phone', read_only=True)
     service_name = serializers.CharField(source='service.name', read_only=True)
     service_duration = serializers.IntegerField(source='service.duration_minutes', read_only=True)
-    professional_name = serializers.CharField(source='assigned_professional.name', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     duration_display = serializers.CharField(read_only=True)
     
@@ -134,29 +127,29 @@ class AppointmentSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'pet', 'pet_name', 'pet_breed', 'owner_name', 'owner_phone',
             'service', 'service_name', 'service_duration', 'appointment_date',
-            'assigned_professional', 'professional_name', 'reason', 'status', 'status_display',
+            'reason', 'status', 'status_display',
             'medication_type', 'medication_dosage', 'instructions', 'observations',
             'actual_start_time', 'actual_end_time', 'duration_display',
             'created_at', 'updated_at'
         ]
         read_only_fields = [
             'id', 'pet_name', 'pet_breed', 'owner_name', 'owner_phone', 
-            'service_name', 'service_duration', 'professional_name', 'status_display',
+            'service_name', 'service_duration', 'status_display',
             'duration_display', 'created_at', 'updated_at'
         ]
 
     def validate_appointment_date(self, value):
-        """Validar fecha de cita"""
+        """Validar fecha y hora de la cita"""
         from datetime import timedelta
         from django.utils import timezone
         if value < timezone.now() - timedelta(hours=1):
             raise serializers.ValidationError("La cita no puede ser en el pasado")
-        if value.hour < 8 or value.hour >= 18:
-            raise serializers.ValidationError("Las citas deben ser entre 8:00 AM y 6:00 PM")
+        if value.hour < 8 or value.hour >= 16:
+            raise serializers.ValidationError("Las citas deben ser entre 8:00 AM y 4:00 PM")
         return value
 
     def validate(self, attrs):
-        """Validaciones cruzadas"""
+        """Validaciones cruzadas entre campos"""
         service = attrs.get('service')
         medication_type = attrs.get('medication_type', '')
         if service and service.requires_medication and not medication_type:
@@ -171,15 +164,30 @@ class AppointmentCalendarSerializer(serializers.ModelSerializer):
     title = serializers.SerializerMethodField()
     pet_name = serializers.CharField(source='pet.name', read_only=True)
     service_name = serializers.CharField(source='service.name', read_only=True)
-    owner_name = serializers.CharField(source='pet.owner.full_name', read_only=True)
-    professional_name = serializers.CharField(source='assigned_professional.name', read_only=True)
+    owner_name = serializers.SerializerMethodField()
     
     class Meta:
         model = Appointment
         fields = [
-            'id', 'title', 'pet_name', 'service_name', 'owner_name', 'professional_name',
+            'id', 'title', 'pet_name', 'service_name', 'owner_name',
             'appointment_date', 'status', 'duration_display'
         ]
 
     def get_title(self, obj):
         return f"{obj.pet.name} - {obj.service.name}"
+    
+    def get_owner_name(self, obj):
+        """Extraer primer nombre + primer apellido del dueño"""
+        full_name = obj.pet.owner.full_name
+        name_parts = full_name.split()
+        
+        if len(name_parts) == 1:
+            return name_parts[0]  # Solo un nombre
+        elif len(name_parts) == 2:
+            return f"{name_parts[0]} {name_parts[1]}"  # Nombre Apellido
+        elif len(name_parts) == 3:
+            return f"{name_parts[0]} {name_parts[2]}"  # Primer_Nombre Primer_Apellido
+        elif len(name_parts) >= 4:
+            return f"{name_parts[0]} {name_parts[2]}"  # Primer_Nombre Primer_Apellido
+        
+        return full_name

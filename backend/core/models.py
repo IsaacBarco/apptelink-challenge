@@ -1,3 +1,4 @@
+# Modelos principales del sistema de atención canina
 from django.db import models
 from django.core.validators import RegexValidator, MinValueValidator
 from django.core.exceptions import ValidationError
@@ -114,7 +115,7 @@ class Pet(models.Model):
         verbose_name_plural = "Mascotas"
 
     def clean(self):
-        """Validaciones customizadas"""
+        """Validaciones personalizadas antes de guardar"""
         if self.birth_date and self.birth_date > date.today():
             raise ValidationError({
                 'birth_date': 'La fecha de nacimiento no puede ser futura'
@@ -184,19 +185,6 @@ class Service(models.Model):
     def __str__(self):
         return f"{self.name} (${self.price})"
 
-class Professional(models.Model):
-    """Profesionales que pueden atender citas"""
-    name = models.CharField(max_length=200, verbose_name="Nombre completo")
-    specialties = models.JSONField(
-        default=list,
-        help_text="Lista de especialidades del profesional"
-    )
-    phone = models.CharField(max_length=15, blank=True)
-    email = models.EmailField(blank=True)
-    is_active = models.BooleanField(default=True)
-    
-    def __str__(self):
-        return self.name
 
 class Appointment(models.Model):
     """Citas con campos completos según PDF"""
@@ -214,15 +202,6 @@ class Appointment(models.Model):
     )
     
     appointment_date = models.DateTimeField(verbose_name="Fecha y hora")
-    
-    # Profesional asignado (opcional según PDF)
-    assigned_professional = models.ForeignKey(
-        Professional,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        verbose_name="Profesional asignado"
-    )
     
     # Motivo (opcional según PDF)
     reason = models.TextField(
@@ -301,30 +280,12 @@ class Appointment(models.Model):
                     'appointment_date': 'No se pueden crear citas con más de 1 día de antigüedad'
                 })
             
-            # Validar horario de trabajo (8:00 - 18:00)
+            # Validar horario de trabajo (8:00 AM - 4:00 PM)
             hour = self.appointment_date.hour
-            if hour < 8 or hour >= 18:
+            if hour < 8 or hour >= 16:
                 raise ValidationError({
-                    'appointment_date': 'Las citas deben ser entre 8:00 AM y 6:00 PM'
+                    'appointment_date': 'Las citas deben ser entre 8:00 AM y 4:00 PM'
                 })
-            
-            # Validar solapamientos para el mismo profesional
-            if self.assigned_professional:
-                duration = timedelta(minutes=self.service.duration_minutes)
-                start_time = self.appointment_date
-                end_time = start_time + duration
-                
-                overlapping = Appointment.objects.filter(
-                    assigned_professional=self.assigned_professional,
-                    appointment_date__lt=end_time,
-                    appointment_date__gte=start_time - timedelta(minutes=60),
-                    status__in=['pendiente', 'confirmada']
-                ).exclude(id=self.id if self.id else None)
-                
-                if overlapping.exists():
-                    raise ValidationError({
-                        'appointment_date': f'El profesional {self.assigned_professional.name} ya tiene una cita en ese horario'
-                    })
 
     def save(self, *args, **kwargs):
         self.full_clean()

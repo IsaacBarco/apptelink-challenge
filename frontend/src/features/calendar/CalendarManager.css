@@ -1,0 +1,384 @@
+.calendar-manager {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  margin: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  min-height: calc(100vh - 140px);
+  display: flex;
+  flex-direction: column;
+  max-width: 1400px; /* Limitar ancho máximo */
+  margin: 20px auto; /* Centrar el calendario */
+}
+
+.calendar-header {
+  margin-bottom: 30px;
+  flex-shrink: 0;
+}
+
+.week-navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.nav-btn {
+  background: #3182ce;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-btn:hover {
+  background: #2c5282;
+  transform: translateY(-1px);
+}
+
+.week-title {
+  color: #2c5282;
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  background: #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  flex: 1;
+  height: calc(9 * 60px + 60px);
+}
+
+.time-column {
+  background: #4299e1;
+  overflow-y: auto;
+}
+
+.time-header {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #3182ce;
+  color: white;
+  font-weight: 600;
+  font-size: 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.time-slot-label {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #4299e1;
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-bottom: 1px solid #3182ce;
+}
+
+.day-column {
+  background: white;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.day-header {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #3182ce;
+  color: white;
+  font-weight: 600;
+  font-size: 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.appointment-slot {
+  height: 60px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 8px;
+  cursor: pointer;
+  position: relative;
+  transition: background-color 0.3s;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.appointment-slot:hover {
+  background: #edf2f7;
+}
+
+.appointment {
+  background: #bfdbfe;
+  border-radius: 6px;
+  padding: 6px 8px;
+  width: 100%;
+  cursor: pointer;
+  transition: all 0.3s;
+  border-left: 4px solid #3b82f6;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 40px;
+}
+
+.appointment:hover {
+  background: #93c5fd;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.appointment-pendiente {
+  border-left-color: #f59e0b;
+  background: #fef3c7;
+}
+
+.appointment-pendiente:hover {
+  background: #fde68a;
+}
+
+.appointment-confirmada {
+  border-left-color: #3b82f6;
+  background: #bfdbfe;
+}
+
+.appointment-confirmada:hover {
+  background: #93c5fd;
+}
+
+.appointment-realizada {
+  border-left-color: #10b981;
+  background: #d1fae5;
+}
+
+.appointment-realizada:hover {
+  background: #a7f3d0;
+}
+
+.appointment-cancelada {
+  border-left-color: #ef4444;
+  background: #fee2e2;
+  opacity: 0.8;
+}
+
+.appointment-cancelada:hover {
+  background: #fecaca;
+}
+
+.appointment-pet {
+  font-weight: 600;
+  color: #1e40af;
+  font-size: 0.95rem;
+  line-height: 1.3;
+  margin-bottom: 2px;
+}
+
+.appointment-owner {
+  color: #4a5568;
+  font-size: 0.8rem;
+  font-weight: 400;
+  line-height: 1.3;
+  margin-bottom: 2px;
+}
+
+.appointment-service {
+  color: #3730a3;
+  font-size: 0.85rem;
+  line-height: 1.3;
+  margin-bottom: 2px;
+}
+
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  color: #64748b;
+  font-size: 1.2rem;
+}
+
+/* Status badges for appointments */
+.appointment-status {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: white;
+}
+
+.status-pendiente {
+  background: #f59e0b;
+}
+
+.status-confirmada {
+  background: #3b82f6;
+}
+
+.status-realizada {
+  background: #10b981;
+}
+
+.status-cancelada {
+  background: #ef4444;
+}
+
+/* Responsive design for desktop first */
+@media (max-width: 1200px) {
+  .calendar-manager {
+    margin: 15px;
+    padding: 25px;
+  }
+  
+  .calendar-grid {
+    grid-template-columns: 100px repeat(6, 1fr);
+  }
+  
+  .time-slot-label {
+    height: 70px;
+    font-size: 0.85rem;
+  }
+  
+  .appointment-slot {
+    height: 70px;
+    padding: 8px;
+  }
+  
+  .appointment {
+    padding: 8px 10px;
+    min-height: 45px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .week-title {
+    font-size: 1.5rem;
+  }
+  
+  .calendar-grid {
+    grid-template-columns: 80px repeat(6, 1fr);
+    max-height: calc(100vh - 250px);
+  }
+  
+  .time-header,
+  .day-header {
+    height: 50px;
+    font-size: 0.9rem;
+  }
+  
+  .time-slot-label {
+    height: 60px;
+    font-size: 0.8rem;
+  }
+  
+  .appointment-slot {
+    height: 60px;
+    padding: 6px;
+  }
+  
+  .appointment {
+    padding: 6px 8px;
+    min-height: 40px;
+  }
+  
+  .appointment-pet {
+    font-size: 0.85rem;
+  }
+  
+  .appointment-owner {
+    font-size: 0.75rem;
+  }
+  
+  .appointment-service {
+    font-size: 0.75rem;
+  }
+  
+}
+
+@media (max-width: 768px) {
+  .calendar-manager {
+    margin: 10px;
+    padding: 20px;
+  }
+  
+  .week-navigation {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .week-title {
+    font-size: 1.3rem;
+  }
+  
+  .calendar-grid {
+    grid-template-columns: 70px repeat(6, 1fr);
+    max-height: 400px;
+    gap: 1px;
+  }
+  
+  .time-header,
+  .day-header {
+    height: 40px;
+    font-size: 0.8rem;
+  }
+  
+  .time-slot-label {
+    height: 50px;
+    font-size: 0.7rem;
+  }
+  
+  .appointment-slot {
+    height: 50px;
+    padding: 4px;
+  }
+  
+  .appointment {
+    padding: 4px 6px;
+    min-height: 35px;
+  }
+  
+  .appointment-pet {
+    font-size: 0.75rem;
+  }
+  
+  .appointment-owner {
+    font-size: 0.65rem;
+  }
+  
+  .appointment-service {
+    font-size: 0.65rem;
+  }
+  
+  
+  .nav-btn {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+}
