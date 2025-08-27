@@ -103,6 +103,7 @@ python manage.py migrate
 # Frontend  
 npm run build
 npm run lint
+npm run dev
 ```
 
 ## Características principales
