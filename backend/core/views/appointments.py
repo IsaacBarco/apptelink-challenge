@@ -1,4 +1,4 @@
-# ViewSet para gestión de citas - funcionalidad principal del sistema
+# ViewSet para gestión de citas
 from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -32,7 +32,7 @@ class AppointmentViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def by_date(self, request):
-        """Consultar citas por fecha específica - RF_C_004"""
+        """Obtener citas por fecha específica"""
         fecha_str = request.query_params.get('date', '')
         if not fecha_str:
             return Response(
@@ -55,7 +55,7 @@ class AppointmentViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def by_pet(self, request):
-        """Consultar citas por mascota específica - RF_C_004"""
+        """Obtener citas de una mascota específica"""
         id_mascota = request.query_params.get('pet_id', '')
         if not id_mascota:
             return Response(
@@ -69,10 +69,10 @@ class AppointmentViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def calendar_week(self, request):
-        """Vista de calendario semanal - usado por el frontend"""
+        """Vista de calendario semanal"""
         from datetime import datetime, timedelta
 
-        # Obtener fecha de inicio de semana (parámetro opcional)
+        # Fecha base para la semana
         fecha_str = request.query_params.get('date', '')
         if fecha_str:
             try:
@@ -83,22 +83,22 @@ class AppointmentViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST
                 )
         else:
-            # Si no se especifica fecha, usar la actual
+            # Usar fecha actual por defecto
             from django.utils import timezone
             fecha_base = timezone.now().date()
 
-        # Calcular inicio y fin de semana (Lunes a Sábado)
+        # Rango de la semana laboral
         dias_desde_lunes = fecha_base.weekday()
         inicio_semana = fecha_base - timedelta(days=dias_desde_lunes)
         fin_semana = inicio_semana + timedelta(days=6)
 
-        # Obtener solo las citas de esa semana
+        # Filtrar citas de la semana
         citas = self.queryset.filter(
             appointment_date__date__gte=inicio_semana,
             appointment_date__date__lte=fin_semana
         )
 
-        # Usar serializer optimizado para calendario
+        # Serializar datos del calendario
         serializer = AppointmentCalendarSerializer(citas, many=True)
         return Response({
             'inicio_semana': inicio_semana,
@@ -108,7 +108,7 @@ class AppointmentViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['patch'])
     def update_status(self, request, pk=None):
-        """Actualizar solo el estado de una cita - RF_C_006"""
+        """Actualizar estado de una cita"""
         cita = self.get_object()
         nuevo_estado = request.data.get('status')
 
@@ -120,7 +120,7 @@ class AppointmentViewSet(viewsets.ModelViewSet):
 
         cita.status = nuevo_estado
 
-        # Auto-completar tiempos si se marca como realizada
+        # Registrar tiempos automáticamente
         if nuevo_estado == 'realizada' and not cita.actual_end_time:
             from django.utils import timezone
             cita.actual_end_time = timezone.now()
@@ -142,13 +142,13 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         """Eliminar cita completamente - usado por botón 'Cancelar Cita'"""
         instance = self.get_object()
         
-        # Regla de negocio: no eliminar citas ya realizadas
+        # Proteger citas completadas
         if instance.status == 'realizada':
             return Response(
                 {'error': 'No se pueden eliminar citas que ya fueron realizadas'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Eliminar la cita de la base de datos
+        # Remover cita del sistema
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)

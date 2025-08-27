@@ -7,6 +7,7 @@ const AppointmentModal = ({ slot, appointment, onClose, onSave }) => {
   const [formData, setFormData] = useState({
     pet: '',
     service: '',
+    professional: '',
     appointment_date: '',
     reason: '',
     status: 'pendiente',
@@ -18,6 +19,7 @@ const AppointmentModal = ({ slot, appointment, onClose, onSave }) => {
 
   const [pets, setPets] = useState([])
   const [services, setServices] = useState([])
+  const [professionals, setProfessionals] = useState([])
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState({})
 
@@ -37,6 +39,7 @@ const AppointmentModal = ({ slot, appointment, onClose, onSave }) => {
       setFormData({
         pet: appointment.pet,
         service: appointment.service,
+        professional: appointment.assigned_professional || '',
         appointment_date: formatDateTimeLocal(appointmentDate),
         reason: appointment.reason || '',
         status: appointment.status,
@@ -57,9 +60,10 @@ const AppointmentModal = ({ slot, appointment, onClose, onSave }) => {
 
   const fetchData = async () => {
     try {
-      const [petsRes, servicesRes] = await Promise.all([
+      const [petsRes, servicesRes, professionalsRes] = await Promise.all([
         fetch(`${API_BASE}/pets/`, { headers: getAuthHeaders() }),
-        fetch(`${API_BASE}/services/`, { headers: getAuthHeaders() })
+        fetch(`${API_BASE}/services/`, { headers: getAuthHeaders() }),
+        fetch(`${API_BASE}/professionals/`, { headers: getAuthHeaders() })
       ])
 
       if (petsRes.ok) {
@@ -70,6 +74,15 @@ const AppointmentModal = ({ slot, appointment, onClose, onSave }) => {
       if (servicesRes.ok) {
         const servicesData = await servicesRes.json()
         setServices(servicesData.results || servicesData)
+      }
+
+      if (professionalsRes.ok) {
+        const professionalsData = await professionalsRes.json()
+        setProfessionals(professionalsData.results || professionalsData)
+      } else {
+        console.error('Error al cargar profesionales:', professionalsRes.status, professionalsRes.statusText)
+        const errorText = await professionalsRes.text()
+        console.error('Error details:', errorText)
       }
 
     } catch (error) {
@@ -98,7 +111,8 @@ const AppointmentModal = ({ slot, appointment, onClose, onSave }) => {
         ...formData,
         appointment_date: formatDateForBackend(appointmentDateTime),
         pet: parseInt(formData.pet),
-        service: parseInt(formData.service)
+        service: parseInt(formData.service),
+        assigned_professional: parseInt(formData.professional)
       }
 
       const response = await fetch(url, {
@@ -178,7 +192,7 @@ const AppointmentModal = ({ slot, appointment, onClose, onSave }) => {
                 <option value="">Seleccionar mascota</option>
                 {pets.map(pet => (
                   <option key={pet.id} value={pet.id}>
-                    {pet.name} - {pet.owner_name}
+                    {pet.name} - {pet.owner_short_name}
                   </option>
                 ))}
               </select>
@@ -198,7 +212,7 @@ const AppointmentModal = ({ slot, appointment, onClose, onSave }) => {
                 <option value="">Seleccionar servicio</option>
                 {services.map(service => (
                   <option key={service.id} value={service.id}>
-                    {service.name} - ${service.price} ({service.duration_minutes}min)
+                    {service.name}
                   </option>
                 ))}
               </select>
@@ -206,6 +220,26 @@ const AppointmentModal = ({ slot, appointment, onClose, onSave }) => {
                 <span className="field-error">{getFieldError('service')}</span>
               )}
             </div>
+          </div>
+
+          <div className="form-group">
+            <label>Profesional *</label>
+            <select
+              value={formData.professional}
+              onChange={(e) => setFormData({...formData, professional: e.target.value})}
+              required
+              disabled={loading}
+            >
+              <option value="">Seleccionar profesional</option>
+              {professionals.map(professional => (
+                <option key={professional.id} value={professional.id}>
+                  {professional.full_name} - {professional.specialty}
+                </option>
+              ))}
+            </select>
+            {getFieldError('professional') && (
+              <span className="field-error">{getFieldError('professional')}</span>
+            )}
           </div>
 
           <div className="form-row">

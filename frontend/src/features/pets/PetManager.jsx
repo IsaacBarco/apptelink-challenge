@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react'
+import { API_BASE, getAuthHeaders } from '../../config/api'
 import './PetManager.css'
 
 const PetManager = () => {
   const [pets, setPets] = useState([])
   const [owners, setOwners] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [showForm, setShowForm] = useState(false)
+  const [cargando, setCargando] = useState(true)
+  const [mostrarFormulario, setMostrarFormulario] = useState(false)
   const [showOwnerModal, setShowOwnerModal] = useState(false)
-  const [editingPet, setEditingPet] = useState(null)
+  const [mascotaEditando, setMascotaEditando] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedOwner, setSelectedOwner] = useState('')
   const [ownerFormData, setOwnerFormData] = useState({
@@ -32,12 +33,6 @@ const PetManager = () => {
     owner: ''
   })
 
-  const API_BASE = 'http://localhost:8000/api'
-
-  const getAuthHeaders = () => ({
-    'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-    'Content-Type': 'application/json'
-  })
 
   useEffect(() => {
     fetchPets()
@@ -56,7 +51,7 @@ const PetManager = () => {
     } catch (error) {
       console.error('Error fetching pets:', error)
     } finally {
-      setLoading(false)
+      setCargando(false)
     }
   }
 
@@ -76,14 +71,14 @@ const PetManager = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setLoading(true)
+    setCargando(true)
 
     try {
-      const url = editingPet 
-        ? `${API_BASE}/pets/${editingPet.id}/`
+      const url = mascotaEditando 
+        ? `${API_BASE}/pets/${mascotaEditando.id}/`
         : `${API_BASE}/pets/`
       
-      const method = editingPet ? 'PUT' : 'POST'
+      const method = mascotaEditando ? 'PUT' : 'POST'
       
       const response = await fetch(url, {
         method,
@@ -107,7 +102,7 @@ const PetManager = () => {
       console.error('Error saving pet:', error)
       alert('Error de conexión con el servidor')
     } finally {
-      setLoading(false)
+      setCargando(false)
     }
   }
 
@@ -117,8 +112,8 @@ const PetManager = () => {
       color: '', weight: '', allergies: '', medical_conditions: '',
       additional_notes: '', owner: ''
     })
-    setEditingPet(null)
-    setShowForm(false)
+    setMascotaEditando(null)
+    setMostrarFormulario(false)
   }
 
   const resetOwnerForm = () => {
@@ -140,7 +135,7 @@ const PetManager = () => {
 
   const handleOwnerSubmit = async (e) => {
     e.preventDefault()
-    setLoading(true)
+    setCargando(true)
 
     try {
       // Combinar nombres y apellidos para el backend
@@ -175,7 +170,7 @@ const PetManager = () => {
       console.error('Error saving owner:', error)
       alert('Error de conexión con el servidor')
     } finally {
-      setLoading(false)
+      setCargando(false)
     }
   }
 
@@ -192,14 +187,14 @@ const PetManager = () => {
       additional_notes: pet.additional_notes || '',
       owner: pet.owner.toString()
     })
-    setEditingPet(pet)
-    setShowForm(true)
+    setMascotaEditando(pet)
+    setMostrarFormulario(true)
   }
 
   const handleDelete = async (pet) => {
     if (confirm(`¿Estás seguro de que quieres eliminar a ${pet.name}? Esta acción no se puede deshacer.`)) {
       try {
-        setLoading(true)
+        setCargando(true)
         const response = await fetch(`${API_BASE}/pets/${pet.id}/`, {
           method: 'DELETE',
           headers: getAuthHeaders()
@@ -216,7 +211,7 @@ const PetManager = () => {
         console.error('Error deleting pet:', error)
         alert('Error de conexión con el servidor')
       } finally {
-        setLoading(false)
+        setCargando(false)
       }
     }
   }
@@ -232,8 +227,8 @@ const PetManager = () => {
   })
 
 
-  if (loading && pets.length === 0) {
-    return <div className="loading">Cargando mascotas...</div>
+  if (cargando && pets.length === 0) {
+    return <div className="cargando">Cargando mascotas...</div>
   }
 
   return (
@@ -242,7 +237,7 @@ const PetManager = () => {
         <h2>Gestión de Mascotas</h2>
         <button 
           className="btn btn-primary"
-          onClick={() => setShowForm(true)}
+          onClick={() => setMostrarFormulario(true)}
         >
           Nueva Mascota
         </button>
@@ -275,11 +270,11 @@ const PetManager = () => {
         </div>
       </div>
 
-      {showForm && (
+      {mostrarFormulario && (
         <div className="modal-overlay">
           <div className="modal">
             <div className="modal-header">
-              <h3>{editingPet ? 'Editar Mascota' : 'Nueva Mascota'}</h3>
+              <h3>{mascotaEditando ? 'Editar Mascota' : 'Nueva Mascota'}</h3>
               <button className="close-btn" onClick={resetForm}>×</button>
             </div>
             
@@ -305,7 +300,7 @@ const PetManager = () => {
                       <option value="">Seleccionar dueño</option>
                       {owners.map(owner => (
                         <option key={owner.id} value={owner.id}>
-                          {owner.full_name} - {owner.identification_number}
+                          {owner.nombre_corto}
                         </option>
                       ))}
                     </select>
@@ -414,8 +409,8 @@ const PetManager = () => {
                 <button type="button" onClick={resetForm} className="btn btn-secondary">
                   Cancelar
                 </button>
-                <button type="submit" className="btn btn-primary" disabled={loading}>
-                  {loading ? 'Guardando...' : 'Guardar'}
+                <button type="submit" className="btn btn-primary" disabled={cargando}>
+                  {cargando ? 'Guardando...' : 'Guardar'}
                 </button>
               </div>
             </form>
@@ -433,7 +428,7 @@ const PetManager = () => {
             <div className="pet-info">
               <p><strong>Raza:</strong> {pet.breed}</p>
               <p><strong>Color:</strong> {pet.color}</p>
-              <p><strong>Edad:</strong> {pet.age_display}</p>
+              <p><strong>Edad:</strong> {pet.edad_mostrar}</p>
               <p><strong>Peso:</strong> {pet.weight} kg</p>
               <p><strong>Dueño:</strong> {pet.owner_name}</p>
               {pet.allergies && <p><strong>Alergias:</strong> {pet.allergies}</p>}
@@ -448,7 +443,7 @@ const PetManager = () => {
               <button 
                 className="btn btn-danger btn-sm"
                 onClick={() => handleDelete(pet)}
-                disabled={loading}
+                disabled={cargando}
               >
                 Eliminar
               </button>
@@ -457,7 +452,7 @@ const PetManager = () => {
         ))}
       </div>
 
-      {filteredPets.length === 0 && !loading && (
+      {filteredPets.length === 0 && !cargando && (
         <div className="empty-state">
           <p>No se encontraron mascotas</p>
         </div>
@@ -574,9 +569,9 @@ const PetManager = () => {
                 <button 
                   type="submit" 
                   className="btn btn-primary"
-                  disabled={loading}
+                  disabled={cargando}
                 >
-                  {loading ? 'Guardando...' : 'Guardar Dueño'}
+                  {cargando ? 'Guardando...' : 'Guardar Dueño'}
                 </button>
               </div>
             </form>

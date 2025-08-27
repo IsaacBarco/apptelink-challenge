@@ -9,7 +9,7 @@ from ..serializers import OwnerSerializer, PetSerializer
 
 
 class OwnerViewSet(viewsets.ModelViewSet):
-    """ViewSet para gestión completa de dueños"""
+    """ViewSet para gestión de propietarios"""
     queryset = Owner.objects.filter(is_active=True)
     serializer_class = OwnerSerializer
     permission_classes = [IsAuthenticated]
@@ -21,7 +21,7 @@ class OwnerViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'])
     def pets(self, request, pk=None):
-        """Obtener todas las mascotas de un dueño específico - RF_DM_004"""
+        """Obtener mascotas de un propietario"""
         owner = self.get_object()
         pets = owner.pets.filter(is_active=True)
         serializer = PetSerializer(pets, many=True)
@@ -29,7 +29,7 @@ class OwnerViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def search_by_identification(self, request):
-        """Buscar dueño por número de identificación"""
+        """Buscar propietario por identificación"""
         identificacion = request.query_params.get('identification', '')
         if not identificacion:
             return Response(
@@ -46,6 +46,6 @@ class OwnerViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         except Owner.DoesNotExist:
             return Response(
-                {'error': 'Dueño no encontrado'},
+                {'error': 'Propietario no encontrado'},
                 status=status.HTTP_404_NOT_FOUND
             )

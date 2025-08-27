@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
+import { API_BASE, getAuthHeaders } from '../../config/api'
 import './OwnerManager.css'
 
 const OwnerManager = () => {
   const [duenos, setDuenos] = useState([])
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
-  const [showModal, setShowModal] = useState(false)
-  const [editingOwner, setEditingOwner] = useState(null)
+  const [mostrarModal, setMostrarModal] = useState(false)
+  const [propietarioEditando, setPropietarioEditando] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [formData, setFormData] = useState({
     first_names: '',
@@ -22,12 +23,6 @@ const OwnerManager = () => {
     obtenerDuenos()
   }, [])
 
-  const API_BASE = 'http://localhost:8000/api'
-
-  const getAuthHeaders = () => ({
-    'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-    'Content-Type': 'application/json'
-  })
 
   const obtenerDuenos = async () => {
     try {
@@ -37,7 +32,6 @@ const OwnerManager = () => {
 
       if (response.ok) {
         const datos = await response.json()
-        console.log('Datos de dueños recibidos:', datos)
         setDuenos(datos.results || datos)
       } else {
         setError('Error al cargar dueños')
@@ -55,11 +49,11 @@ const OwnerManager = () => {
     setCargando(true)
 
     try {
-      const url = editingOwner 
-        ? `${API_BASE}/owners/${editingOwner.id}/`
+      const url = propietarioEditando 
+        ? `${API_BASE}/owners/${propietarioEditando.id}/`
         : `${API_BASE}/owners/`
       
-      const method = editingOwner ? 'PUT' : 'POST'
+      const method = propietarioEditando ? 'PUT' : 'POST'
 
       // Combinar nombres y apellidos para el backend
       const dataToSend = {
@@ -101,15 +95,13 @@ const OwnerManager = () => {
       phone: '',
       email: ''
     })
-    setEditingOwner(null)
-    setShowModal(false)
+    setPropietarioEditando(null)
+    setMostrarModal(false)
   }
 
   const handleEdit = (owner) => {
-    // Separar el nombre completo en nombres y apellidos
+    // Dividir nombre completo
     const nameParts = owner.full_name.split(' ')
-    
-    // Lógica: primeros dos elementos son nombres, últimos dos son apellidos
     let first_names = ''
     let last_names = ''
     
@@ -136,13 +128,13 @@ const OwnerManager = () => {
       phone: owner.phone,
       email: owner.email || ''
     })
-    setEditingOwner(owner)
-    setShowModal(true)
+    setPropietarioEditando(owner)
+    setMostrarModal(true)
   }
 
   const handleNew = () => {
     resetForm()
-    setShowModal(true)
+    setMostrarModal(true)
   }
 
   const handleDelete = async (owner) => {
@@ -247,11 +239,11 @@ const OwnerManager = () => {
         </div>
       )}
 
-      {showModal && (
+      {mostrarModal && (
         <div className="modal-overlay">
           <div className="modal">
             <div className="modal-header">
-              <h3>{editingOwner ? 'Editar Dueño' : 'Nuevo Dueño'}</h3>
+              <h3>{propietarioEditando ? 'Editar Dueño' : 'Nuevo Dueño'}</h3>
               <button className="close-btn" onClick={resetForm}>×</button>
             </div>
             
@@ -347,7 +339,7 @@ const OwnerManager = () => {
                   className="btn btn-primary"
                   disabled={cargando}
                 >
-                  {cargando ? 'Guardando...' : (editingOwner ? 'Actualizar' : 'Crear')}
+                  {cargando ? 'Guardando...' : (propietarioEditando ? 'Actualizar' : 'Crear')}
                 </button>
               </div>
             </form>

@@ -21,7 +21,7 @@ class PetViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def by_owner_name(self, request):
-        """Buscar mascotas por nombre del dueño - RF_M_003"""
+        """Buscar mascotas por nombre del propietario"""
         nombre_dueno = request.query_params.get('owner_name', '')
         if not nombre_dueno:
             return Response(

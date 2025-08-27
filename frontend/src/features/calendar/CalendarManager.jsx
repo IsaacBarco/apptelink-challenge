@@ -1,34 +1,22 @@
 // Componente principal del calendario - vista semanal de citas
 import { useState, useEffect } from 'react'
 import AppointmentModal from './components/AppointmentModal'
-import { toEcuadorTime, getEcuadorDateString, formatDateFromBackend } from '../../utils/timezone'
+import {
+    toEcuadorTime,
+    getEcuadorDateString,
+    formatDateFromBackend
+} from '../../utils/timezone'
+import { API_BASE, getAuthHeaders } from '../../config/api'
+import { generateTimeSlots, formatDateHeader } from '../../utils/calendar'
 import './CalendarManager.css'
 
 const CalendarManager = () => {
     const [appointments, setAppointments] = useState([])
     const [currentWeek, setCurrentWeek] = useState(toEcuadorTime(new Date()))
-    const [loading, setLoading] = useState(true)
-    const [showModal, setShowModal] = useState(false)
+    const [cargando, setCargando] = useState(true)
+    const [mostrarModal, setMostrarModal] = useState(false)
     const [selectedSlot, setSelectedSlot] = useState(null)
     const [selectedAppointment, setSelectedAppointment] = useState(null)
-
-    const API_BASE = 'http://localhost:8000/api'
-
-    const getAuthHeaders = () => ({
-        'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-        'Content-Type': 'application/json'
-    })
-
-    // Horarios de trabajo: 8:00 AM a 4:00 PM (16:00)
-    const generateTimeSlots = () => {
-        const slots = []
-        for (let hour = 8; hour <= 16; hour++) {
-            const time = `${hour.toString().padStart(2, '0')}:00`
-            slots.push(time)
-        }
-        console.log('Generated time slots:', slots)
-        return slots
-    }
 
     const timeSlots = generateTimeSlots()
 
@@ -56,16 +44,16 @@ const CalendarManager = () => {
 
     const fetchWeekAppointments = async () => {
         try {
-            setLoading(true)
+            setCargando(true)
             const dateStr = getEcuadorDateString(currentWeek)
             console.log('Fetching appointments for week (Ecuador time):', dateStr)
-            
+
             const response = await fetch(`${API_BASE}/appointments/calendar_week/?date=${dateStr}`, {
                 headers: getAuthHeaders()
             })
 
             console.log('Response status:', response.status)
-            
+
             if (response.ok) {
                 const data = await response.json()
                 console.log('API Response:', data)
@@ -77,7 +65,7 @@ const CalendarManager = () => {
         } catch (error) {
             console.error('Error fetching appointments:', error)
         } finally {
-            setLoading(false)
+            setCargando(false)
         }
     }
 
@@ -87,12 +75,6 @@ const CalendarManager = () => {
         setCurrentWeek(toEcuadorTime(newWeek))
     }
 
-    const formatDateHeader = (date) => {
-        const days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
-        const dayName = days[date.getDay() - 1] || 'Sáb'
-        const dayNumber = date.getDate()
-        return `${dayName} ${dayNumber}`
-    }
 
     const handleSlotClick = (time, date) => {
         const datetime = new Date(date)
@@ -105,13 +87,13 @@ const CalendarManager = () => {
             formatted: datetime.toISOString().slice(0, 16)
         })
         setSelectedAppointment(null)
-        setShowModal(true)
+        setMostrarModal(true)
     }
 
     const handleAppointmentClick = (appointment) => {
         setSelectedAppointment(appointment)
         setSelectedSlot(null)
-        setShowModal(true)
+        setMostrarModal(true)
     }
 
     const getAppointmentsForSlot = (time, date) => {
@@ -130,22 +112,7 @@ const CalendarManager = () => {
                 aptDate.getHours() === slotDateTime.getHours() &&
                 Math.floor(aptDate.getMinutes() / 60) === Math.floor(slotDateTime.getMinutes() / 60)
             )
-            
-            // Debug para las primeras citas (remover en producción)
-            if (apt.id === 1 || apt.id === 2 || apt.id === 3) {
-                console.log(`Checking appointment ${apt.id}:`, {
-                    aptDate: aptDate.toISOString(),
-                    slotDateTime: slotDateTime.toISOString(),
-                    time,
-                    date: date.toISOString().split('T')[0],
-                    matches,
-                    aptHour: aptDate.getHours(),
-                    slotHour: slotDateTime.getHours(),
-                    aptMinutes: aptDate.getMinutes(),
-                    slotMinutes: slotDateTime.getMinutes()
-                })
-            }
-            
+
             return matches
         })
 
@@ -153,7 +120,7 @@ const CalendarManager = () => {
     }
 
     const closeModal = () => {
-        setShowModal(false)
+        setMostrarModal(false)
         setSelectedSlot(null)
         setSelectedAppointment(null)
     }
@@ -176,8 +143,8 @@ const CalendarManager = () => {
         }
     }
 
-    if (loading) {
-        return <div className="loading">Cargando calendario...</div>
+    if (cargando) {
+        return <div className="cargando">Cargando calendario...</div>
     }
 
     return (
@@ -234,9 +201,12 @@ const CalendarManager = () => {
                                                 handleAppointmentClick(appointment)
                                             }}
                                         >
-                                            <div className="appointment-pet">{appointment.pet_name}</div>
-                                            <div className="appointment-owner">{appointment.owner_name}</div>
-                                            <div className="appointment-service">{appointment.service_name}</div>
+                                            <div className="appointment-pet">{appointment.pet_name}</div>                                            <div className="appointment-service">{appointment.service_name}</div>
+                                            {appointment.professional_name && (
+                                                <div className="appointment-professional">
+                                                    Dr. {appointment.professional_name}
+                                                </div>
+                                            )}
                                         </div>
                                     ))}
                                 </div>
@@ -246,7 +216,7 @@ const CalendarManager = () => {
                 ))}
             </div>
 
-            {showModal && (
+            {mostrarModal && (
                 <AppointmentModal
                     slot={selectedSlot}
                     appointment={selectedAppointment}

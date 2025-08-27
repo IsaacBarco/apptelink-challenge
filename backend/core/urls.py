@@ -5,6 +5,7 @@ from .views import (
     PetViewSet,
     ServiceViewSet,
     AppointmentViewSet,
+    ProfessionalViewSet,
     ReportsViewSet,
     StatusView,
 )
@@ -14,6 +15,7 @@ router.register(r'owners', OwnerViewSet)
 router.register(r'pets', PetViewSet)
 router.register(r'services', ServiceViewSet)
 router.register(r'appointments', AppointmentViewSet)
+router.register(r'professionals', ProfessionalViewSet)
 router.register(r'reports', ReportsViewSet, basename='reports')
 
 urlpatterns = [

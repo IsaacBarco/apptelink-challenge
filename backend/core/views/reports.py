@@ -17,7 +17,7 @@ from django.db.models import Q
 
 
 class ReportsViewSet(viewsets.ViewSet):
-    """ViewSet para generación de informes según PDF"""
+    """ViewSet para generación de informes del sistema"""
     permission_classes = [IsAuthenticated]
 
     @action(detail=False, methods=['get'])
@@ -60,20 +60,20 @@ class ReportsViewSet(viewsets.ViewSet):
         # Estadísticas por profesional (removido)
 
         # Tendencia por días
-        last_30_days = []
+        ultimos_30_dias = []
         for i in range(29, -1, -1):
-            day = timezone.now().date() - timedelta(days=i)
-            count = appointments.filter(appointment_date__date=day).count()
-            last_30_days.append({
-                'date': day.strftime('%Y-%m-%d'),
-                'count': count
+            dia = timezone.now().date() - timedelta(days=i)
+            cantidad = appointments.filter(appointment_date__date=dia).count()
+            ultimos_30_dias.append({
+                'date': dia.strftime('%Y-%m-%d'),
+                'count': cantidad
             })
 
         return Response({
             'total_appointments': appointments.count(),
             'by_status': list(stats_by_status),
             'by_service': list(stats_by_service),
-            'last_30_days': last_30_days,
+            'last_30_days': ultimos_30_dias,
             'period': {
                 'start': start_date,
                 'end': end_date

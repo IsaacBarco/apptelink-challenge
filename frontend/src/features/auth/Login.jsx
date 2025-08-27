@@ -29,7 +29,7 @@ const Login = ({ setIsAuthenticated }) => {
         localStorage.setItem('access_token', datos.access)
         localStorage.setItem('refresh_token', datos.refresh)
         localStorage.setItem('user', JSON.stringify(datos.user))
-        
+
         setIsAuthenticated(true)
       } else {
         setError(datos.error || 'Error al iniciar sesión')
@@ -52,12 +52,11 @@ const Login = ({ setIsAuthenticated }) => {
     <div className="login-container">
       <div className="login-form-container">
         <h1 className="login-title">Iniciar sesión</h1>
-        
+
         <form onSubmit={manejarEnvio} className="login-form">
           <div className="form-group">
             <label htmlFor="username">Nombre de usuario</label>
             <div className="input-wrapper">
-              <span className="input-icon">👤</span>
               <input
                 type="text"
                 id="username"
@@ -73,7 +72,6 @@ const Login = ({ setIsAuthenticated }) => {
           <div className="form-group">
             <label htmlFor="password">Contraseña</label>
             <div className="input-wrapper">
-              <span className="input-icon">🔒</span>
               <input
                 type="password"
                 id="password"
